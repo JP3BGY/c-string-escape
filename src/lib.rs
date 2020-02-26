@@ -175,6 +175,10 @@ mod tests {
     #[test]
     fn escape_test(){
         assert_eq!(escape(b"'\"hello\"'"), r#"\'\"hello\"\'"#);
-        assert_eq!(unescape(&escape(&[8u8,10u8,255u8,234u8])), Ok([8u8,10u8,255u8,234u8].to_vec()));
+        let mut all = [0u8;256];
+        for i in 0..256{
+            all[i]=i as u8;
+        }
+        assert_eq!(unescape(&escape(&all)), Ok(all.to_vec()));
     }
 }
