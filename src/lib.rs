@@ -7,6 +7,34 @@ pub enum UnescapeError {
     UnicodeError(usize),
     Overflow(usize),
 }
+pub fn escape(input:&[u8])->String{
+    let mut ret = String::new();
+    for i in input.iter(){
+        match i {
+            b'\\'|b'\''|b'"'|b'?' => {
+                ret.push('\\');
+                ret.push(char::from(*i));
+            },
+            10u8=>{
+                ret.push('\\');
+                ret.push('n');
+            },
+            13u8=>{
+                ret.push('\\');
+                ret.push('r');
+            },
+            ch if 0x20 <= *ch && *ch < 0x7f =>{
+                ret.push(char::from(*ch));
+            }
+            ch => {
+                ret.push('\\');
+                ret.push('x');
+                ret=ret+&format!("{:X}",*ch);
+            }
+        }
+    }
+    ret
+}
 pub fn unescape(input:&str)-> Result<Vec<u8>,UnescapeError>{
     let mut itr = input.char_indices();
     let mut ret: Vec<u8> = Vec::new();
@@ -143,5 +171,10 @@ mod tests {
             Err(UnescapeError::UnivCharError(11)));
         assert_eq!(unescape(r#"\"#), 
             Err(UnescapeError::UnmatchEscape));
+    }
+    #[test]
+    fn escape_test(){
+        assert_eq!(escape(b"'\"hello\"'"), r#"\'\"hello\"\'"#);
+        assert_eq!(unescape(&escape(&[8u8,10u8,255u8,234u8])), Ok([8u8,10u8,255u8,234u8].to_vec()));
     }
 }
